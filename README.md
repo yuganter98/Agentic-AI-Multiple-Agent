@@ -185,22 +185,36 @@ cd backend
 pip install -r requirements.txt
 ```
 
-**3️⃣ Start Redis**
+**3️⃣ Setup Environment Variables**
+Create a `.env` file in the `backend/` directory and configure your keys:
+```env
+# LLM Configuration (OpenRouter Example)
+USE_LOCAL_LLM=false
+USE_OPENROUTER_LLM=true
+OPENROUTER_API_KEY="your_openrouter_api_key_here"
+OPENAI_BASE_URL="https://openrouter.ai/api/v1"
+MODEL_NAME="nvidia/nemotron-3-super-120b-a12b:free"
+
+# Tool APIs
+TAVILY_API_KEY="your_tavily_api_key_here"
+```
+
+**4️⃣ Start Redis**
 Using Docker:
 ```bash
 docker run -p 6379:6379 redis
 ```
 
-**4️⃣ Start Local LLM**
+**5️⃣ Start Local LLM**
 Run a model using LM Studio and enable the API server. Example model: `gemma-3n-e4b`.
 
-**5️⃣ Start Backend**
+**6️⃣ Start Backend**
 ```bash
 uvicorn api.main:app --reload
 ```
 Backend runs at: `http://localhost:8000`
 
-**6️⃣ Start Frontend**
+**7️⃣ Start Frontend**
 ```bash
 cd ../frontend
 npm install
