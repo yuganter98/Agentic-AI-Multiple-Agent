@@ -1,0 +1,27 @@
+# Environment
+.env
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+.next/
+out/
+build/
+dist/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Backend Data
+backend/data/documents/
+backend/chroma_db/
+
+# Python Temporary
+*.log

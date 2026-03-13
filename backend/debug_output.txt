@@ -1,0 +1,24 @@
+### EXPLANATION
+A number n is a Fibonacci number if and only if one or both of (5*n*n + 4) or (5*n*n - 4) is a perfect square. The code checks this condition using integer square root.
+
+### CODE
+\\python
+import math
+
+def is_fibonacci(n: int) -> bool:
+    """Return True if n is a Fibonacci number, else False."""
+    if n < 0:
+        return False
+    # Helper to check perfect square
+    def is_square(x: int) -> bool:
+        y = int(math.isqrt(x))
+        return y * y == x    return is_square(5 * n * n + 4) or is_square(5 * n * n - 4)
+
+# Example usage
+if __name__ == "__main__":
+    num = int(input("Enter a number: "))
+    if is_fibonacci(num):
+        print(f"{num} is a Fibonacci number.")
+    else:
+        print(f"{num} is NOT a Fibonacci number.")
+\

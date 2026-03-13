@@ -175,8 +175,8 @@ frontend/
 
 **1️⃣ Clone Repository**
 ```bash
-git clone https://github.com/yourusername/agentic-ai-platform.git
-cd agentic-ai-platform
+git clone https://github.com/yuganter98/Agentic-AI-Multiple-Agent.git
+cd Agentic-AI-Multiple-Agent
 ```
 
 **2️⃣ Install Backend Dependencies**

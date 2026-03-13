@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+openai
+pydantic
+python-dotenv
+tavily-python
+chromadb
+sentence-transformers
+langgraph
+langchain
+pypdf
+langchain-community
+tiktoken
+redis
