@@ -30,7 +30,10 @@ code_generator = CodeGeneratorAgent(llm_provider)
 code_reviewer = CodeReviewerAgent(llm_provider)
 
 # Run initial ingestion of PDF documents inside data/documents automatically
-knowledge.ingest_documents()
+try:
+    knowledge.ingest_documents()
+except Exception as e:
+    print(f"[Startup] Warning: Document ingestion failed (no documents found?): {e}")
 
 # ----------------------------
 # General & Research Nodes
