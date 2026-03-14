@@ -1,6 +1,6 @@
 import { AgentWorkflowResponse } from "../types/agent";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function submitTask(task: string): Promise<AgentWorkflowResponse> {
     const response = await fetch(`${API_BASE_URL}/task`, {

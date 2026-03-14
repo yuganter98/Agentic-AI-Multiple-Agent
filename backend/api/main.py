@@ -43,11 +43,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Agentic AI System API - LangGraph Edition", lifespan=lifespan)
 
-# Allow requests from the Next.js frontend
+# Allow requests from the Next.js frontend (localhost + all Vercel deployments)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
