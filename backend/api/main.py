@@ -1,19 +1,30 @@
 import os
 import sys
+from contextlib import asynccontextmanager
 
 # Add the parent directory to sys.path to resolve module imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, HTTPException
 from schemas.task_schema import TaskRequest
-from workflow.agent_graph import agentic_app
-from cache.redis_cache import RedisCache
 from observability.metrics_collector import MetricsCollector
 import time
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Agentic AI System API - LangGraph Edition")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load heavy AI models and agents AFTER uvicorn has bound the port."""
+    print("[Startup] Loading agents and models...")
+    from workflow.agent_graph import agentic_app
+    from cache.redis_cache import RedisCache
+    app.state.agentic_app = agentic_app
+    app.state.redis_cache = RedisCache()
+    print("[Startup] All agents loaded successfully.")
+    yield
+    print("[Shutdown] Cleaning up...")
+
+app = FastAPI(title="Agentic AI System API - LangGraph Edition", lifespan=lifespan)
 
 # Allow requests from the Next.js frontend
 app.add_middleware(
@@ -24,10 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize global Redis cache connection
-redis_cache = RedisCache()
-
-# Initialize Global Metrics Collector
+# Initialize Global Metrics Collector (lightweight, safe at import time)
 metrics_collector = MetricsCollector()
 
 @app.post("/task")
@@ -36,6 +44,8 @@ async def process_task(request: TaskRequest):
     Accepts a task from the user, checks the cache, and invokes the multi-agent LangGraph workflow if necessary.
     """
     start_time = time.time()
+    redis_cache = app.state.redis_cache
+    agentic_app = app.state.agentic_app
     try:
         # Check Redis Cache
         cached_answer = redis_cache.get_cached_answer(request.task)
