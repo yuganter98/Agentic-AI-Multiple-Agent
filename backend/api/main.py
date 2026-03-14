@@ -12,17 +12,34 @@ import time
 
 from fastapi.middleware.cors import CORSMiddleware
 
+import threading
+
+# Global flag - prevents requests from being served until agents are fully loaded
+_agents_ready = False
+
+def _load_agents_in_background(app: FastAPI):
+    """Downloads model weights and initializes agents in a background thread."""
+    global _agents_ready
+    try:
+        print("[Startup] Background thread: loading agents & models...")
+        from workflow.agent_graph import agentic_app
+        from cache.redis_cache import RedisCache
+        app.state.agentic_app = agentic_app
+        app.state.redis_cache = RedisCache()
+        _agents_ready = True
+        print("[Startup] Background thread: All agents ready!")
+    except Exception as e:
+        print(f"[Startup] ERROR loading agents: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load heavy AI models and agents AFTER uvicorn has bound the port."""
-    print("[Startup] Loading agents and models...")
-    from workflow.agent_graph import agentic_app
-    from cache.redis_cache import RedisCache
-    app.state.agentic_app = agentic_app
-    app.state.redis_cache = RedisCache()
-    print("[Startup] All agents loaded successfully.")
+    """Start agent loading in background thread, then yield immediately so port binds."""
+    thread = threading.Thread(target=_load_agents_in_background, args=(app,), daemon=True)
+    thread.start()
+    # Yield immediately - uvicorn binds port NOW while models load in background
     yield
     print("[Shutdown] Cleaning up...")
+
 
 app = FastAPI(title="Agentic AI System API - LangGraph Edition", lifespan=lifespan)
 
@@ -43,6 +60,9 @@ async def process_task(request: TaskRequest):
     """
     Accepts a task from the user, checks the cache, and invokes the multi-agent LangGraph workflow if necessary.
     """
+    if not _agents_ready:
+        raise HTTPException(status_code=503, detail="System is warming up. Please try again in 30 seconds.")
+    
     start_time = time.time()
     redis_cache = app.state.redis_cache
     agentic_app = app.state.agentic_app
