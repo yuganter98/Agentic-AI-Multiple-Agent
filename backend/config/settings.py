@@ -21,5 +21,8 @@ class Settings:
     
     # Tooling
     TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+    
+    # Redis configuration
+    REDIS_URL = os.getenv("REDIS_URL", "")
 
 settings = Settings()

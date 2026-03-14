@@ -1,6 +1,7 @@
 import redis
 import json
 import hashlib
+import os
 from typing import Optional
 
 class RedisCache:
@@ -9,7 +10,11 @@ class RedisCache:
     """
     def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0):
         # Initialize Redis client. Note: requires a running Redis server.
-        self.client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+        redis_url = os.environ.get("REDIS_URL")
+        if redis_url:
+            self.client = redis.from_url(redis_url, decode_responses=True)
+        else:
+            self.client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
         
     def _generate_key(self, query: str) -> str:
         """
