@@ -142,3 +142,11 @@ async def get_metrics():
     Returns an aggregated statistical summary of all platform observations.
     """
     return metrics_collector.get_metrics_summary()
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    
+    # Use the port assigned by the cloud platform, or default to 8000
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("api.main:app", host="0.0.0.0", port=port)

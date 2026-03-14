@@ -12,3 +12,4 @@ pypdf
 langchain-community
 tiktoken
 redis
+gunicorn
