@@ -9,10 +9,8 @@ class VectorStore:
         # Initialize an in-memory or persisted ChromaDB client
         self.client = chromadb.PersistentClient(path="./chroma_db")
         
-        # Use sentence-transformers exactly as requested
-        self.sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2"
-        )
+        # Use ChromaDB's built-in ONNX embedding (no large downloads, works on free tier)
+        self.sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
         
         # Get or create the memory collection using the specified embedding function
         self.collection = self.client.get_or_create_collection(
