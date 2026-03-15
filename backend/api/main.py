@@ -16,11 +16,13 @@ import threading
 
 # Global flag - prevents requests from being served until agents are fully loaded
 _agents_ready = False
+_startup_error = None
 
 def _load_agents_in_background(app: FastAPI):
     """Downloads model weights and initializes agents in a background thread."""
-    global _agents_ready
+    global _agents_ready, _startup_error
     try:
+        import traceback
         print("[Startup] Background thread: loading agents & models...")
         from workflow.agent_graph import agentic_app
         from cache.redis_cache import RedisCache
@@ -29,7 +31,9 @@ def _load_agents_in_background(app: FastAPI):
         _agents_ready = True
         print("[Startup] Background thread: All agents ready!")
     except Exception as e:
-        print(f"[Startup] ERROR loading agents: {e}")
+        import traceback
+        _startup_error = traceback.format_exc()
+        print(f"[Startup] ERROR loading agents: {_startup_error}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -165,6 +169,14 @@ async def process_task(request: TaskRequest):
         return response_payload
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/status")
+async def get_status():
+    """Returns the startup readiness of the agent system."""
+    return {
+        "ready": _agents_ready,
+        "error": _startup_error
+    }
 
 @app.get("/metrics")
 async def get_metrics():
