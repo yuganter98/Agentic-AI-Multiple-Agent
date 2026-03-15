@@ -19,8 +19,7 @@ dist/
 .vscode/
 .idea/
 
-# Backend Data
-backend/data/documents/
+# Backend Data (ChromaDB is auto-generated, but documents should be committed)
 backend/chroma_db/
 
 # Python Temporary
