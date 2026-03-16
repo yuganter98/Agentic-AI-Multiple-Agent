@@ -1,5 +1,4 @@
-import chromadb
-from rag.embedding import EmbeddingModel
+from config.settings import settings
 
 class KnowledgeVectorStore:
     """
@@ -8,7 +7,8 @@ class KnowledgeVectorStore:
     """
     def __init__(self):
         # Instantiate persistent client but defer embedding model
-        self.client = chromadb.PersistentClient(path="./chroma_db")
+        # Use centralized vector database path
+        self.client = chromadb.PersistentClient(path=settings.VECTOR_DB_PATH)
         self._collection = None
         self._embedding_model = None
 

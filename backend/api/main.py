@@ -14,9 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import threading
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("api")
+from config.settings import settings
 
 # Global flag - prevents requests from being served until agents are fully loaded
 _agents_ready = False
@@ -41,16 +39,43 @@ def _load_agents_in_background(app: FastAPI):
     try:
         import traceback
         _last_status = "Starting background loading..."
+        
+        # Determine environment
+        env = "Local"
+        if os.environ.get("RAILWAY_STATIC_URL"):
+            env = "Railway"
+        elif os.environ.get("RENDER_EXTERNAL_URL"):
+            env = "Render"
+        
+        logger.info(f"--- Startup Diagnostics ({env}) ---")
+        
+        # Check OpenRouter
+        or_key = settings.OPENROUTER_API_KEY
+        if or_key:
+            logger.info(f"[OpenRouter] API Key found (ends with ...{or_key[-4:] if len(or_key)>4 else '****'})")
+        else:
+            logger.warning("[OpenRouter] API Key NOT found")
+
         _memory_usage = get_process_memory()
         logger.info(f"[_last_status] Memory: {_memory_usage}")
 
-        print("[Startup] Background thread: loading agents & models...")
+        print(f"[Startup] Background thread: loading agents & models in {env}...")
         _last_status = "Importing workflow (this can take a while)..."
         _memory_usage = get_process_memory()
         
         from workflow.agent_graph import agentic_app
         from cache.redis_cache import RedisCache
         
+        # Check Redis
+        try:
+            temp_cache = RedisCache()
+            if temp_cache.client.ping():
+                logger.info("[Redis] Connection successful")
+            else:
+                logger.warning("[Redis] Connection failed (Ping failed)")
+        except Exception as re:
+            logger.warning(f"[Redis] Connection error: {re}")
+
         _last_status = "Initializing state values..."
         app.state.agentic_app = agentic_app
         app.state.redis_cache = RedisCache()
@@ -89,14 +114,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Agentic AI System API - LangGraph Edition", lifespan=lifespan)
 
-# Allow requests from the Next.js frontend (localhost + all Vercel deployments)
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health")
+async def health_check():
+    """Lightweight health check for Railway/Render."""
+    return {"status": "ok", "timestamp": time.time()}
 
 # Initialize Global Metrics Collector (lightweight, safe at import time)
 metrics_collector = MetricsCollector()

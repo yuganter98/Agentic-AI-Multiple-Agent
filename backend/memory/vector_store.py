@@ -1,5 +1,4 @@
-import chromadb
-from chromadb.utils import embedding_functions
+from config.settings import settings
 
 class VectorStore:
     """
@@ -7,7 +6,8 @@ class VectorStore:
     """
     def __init__(self):
         # Initialize an in-memory or persisted ChromaDB client but defer heavy ef
-        self.client = chromadb.PersistentClient(path="./chroma_db")
+        # Use centralized vector database path
+        self.client = chromadb.PersistentClient(path=settings.VECTOR_DB_PATH)
         self._collection = None
         self._ef = None
 

@@ -193,27 +193,23 @@ pip install -r requirements.txt
 ```
 
 **3️⃣ Setup Environment Variables**
-Create a `.env` file in the `backend/` directory and configure your keys:
-```env
-# LLM Configuration (OpenRouter Example)
-USE_LOCAL_LLM=false
-USE_OPENROUTER_LLM=true
-OPENROUTER_API_KEY="your_openrouter_api_key_here"
-OPENAI_BASE_URL="https://openrouter.ai/api/v1"
-MODEL_NAME="nvidia/nemotron-3-super-120b-a12b:free"
-
-# Tool APIs
-TAVILY_API_KEY="your_tavily_api_key_here"
+Copy the template `.env.example` to `.env` and configure your keys:
+```bash
+cp .env.example .env
 ```
+Key configurations:
+- `OPENROUTER_API_KEY`: Required for OpenRouter LLMs
+- `TAVILY_API_KEY`: Required for web search
+- `REDIS_URL`: Required for caching (e.g., Upstash or local Redis)
 
-**4️⃣ Start Redis**
+**4️⃣ Start Redis** (Local)
 Using Docker:
 ```bash
 docker run -p 6379:6379 redis
 ```
 
-**5️⃣ Start Local LLM**
-Run a model using LM Studio and enable the API server. Example model: `gemma-3n-e4b`.
+**5️⃣ Start Local LLM** (Optional)
+Run a model using LM Studio and enable the API server.
 
 **6️⃣ Start Backend**
 ```bash
@@ -228,6 +224,27 @@ npm install
 npm run dev
 ```
 Open: `http://localhost:3000`
+
+## ☁️ Deployment
+
+### Render (Backend)
+1. Create a **Web Service**.
+2. Connect your GitHub repository.
+3. Select **Python** runtime.
+4. Set Build Command: `pip install -r requirements.txt`
+5. Set Start Command: `uvicorn api.main:app --host 0.0.0.0 --port $PORT`
+6. Add Environment Variables (see `.env.example`).
+
+### Railway (Backend)
+1. Create a **New Project** → **Deploy from GitHub**.
+2. Railway will automatically detect the **Procfile** and **runtime.txt**.
+3. Add Environment Variables in the **Variables** tab.
+4. Ensure `PORT` variable is automatically assigned by Railway.
+
+### Vercel (Frontend)
+1. Connect GitHub repo.
+2. Set Environment Variable: `NEXT_PUBLIC_API_URL` to your backend URL.
+3. Deploy.
 
 ## 🧪 Example Usage
 

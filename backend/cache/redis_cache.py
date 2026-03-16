@@ -1,16 +1,12 @@
-import redis
-import json
-import hashlib
-import os
-from typing import Optional
+from config.settings import settings
 
 class RedisCache:
     """
     Handles caching of agent responses using Redis.
     """
     def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0):
-        # Initialize Redis client. Note: requires a running Redis server.
-        redis_url = os.environ.get("REDIS_URL")
+        # Initialize Redis client using centralized settings
+        redis_url = settings.REDIS_URL
         if redis_url:
             self.client = redis.from_url(redis_url, decode_responses=True)
         else:

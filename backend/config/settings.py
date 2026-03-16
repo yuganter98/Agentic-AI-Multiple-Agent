@@ -25,4 +25,10 @@ class Settings:
     # Redis configuration
     REDIS_URL = os.getenv("REDIS_URL", "")
 
+    # Security & Networking
+    ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+    
+    # Vector Database
+    VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "./chroma_db")
+
 settings = Settings()
