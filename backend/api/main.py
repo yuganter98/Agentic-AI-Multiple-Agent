@@ -16,6 +16,10 @@ import logging
 
 from config.settings import settings
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("api")
+
 # Global flag - prevents requests from being served until agents are fully loaded
 _agents_ready = False
 _startup_error = None
