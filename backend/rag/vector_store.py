@@ -1,3 +1,4 @@
+import chromadb
 from config.settings import settings
 
 class KnowledgeVectorStore:
