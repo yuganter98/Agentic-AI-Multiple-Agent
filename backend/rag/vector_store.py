@@ -7,15 +7,27 @@ class KnowledgeVectorStore:
     for structured document RAG.
     """
     def __init__(self):
-        # Instantiate persistent client and embedding function
+        # Instantiate persistent client but defer embedding model
         self.client = chromadb.PersistentClient(path="./chroma_db")
-        self.embedding_model = EmbeddingModel()
-        
-        # Access or initialize the knowledge_base collection
-        self.collection = self.client.get_or_create_collection(
-            name="knowledge_base",
-            embedding_function=self.embedding_model.get_embedding_function()
-        )
+        self._collection = None
+        self._embedding_model = None
+
+    @property
+    def embedding_model(self):
+        if self._embedding_model is None:
+            from rag.embedding import EmbeddingModel
+            self._embedding_model = EmbeddingModel()
+        return self._embedding_model
+
+    @property
+    def collection(self):
+        if self._collection is None:
+            self._collection = self.client.get_or_create_collection(
+                name="knowledge_base",
+                embedding_function=self.embedding_model.get_embedding_function()
+            )
+        return self._collection
+
 
     def add_chunks(self, chunks):
         """

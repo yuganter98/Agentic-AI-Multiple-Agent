@@ -29,13 +29,9 @@ classifier = TaskClassifier(llm_provider)
 code_generator = CodeGeneratorAgent(llm_provider)
 code_reviewer = CodeReviewerAgent(llm_provider)
 
-# Run initial ingestion of PDF documents inside data/documents automatically
-try:
-    knowledge.ingest_documents()
-except Exception as e:
-    print(f"[Startup] Warning: Document ingestion failed (no documents found?): {e}")
-
+# Document ingestion is now handled in api/main.py's background thread
 # ----------------------------
+
 # General & Research Nodes
 # ----------------------------
 def planner_node(state: AgentState):

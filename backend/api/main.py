@@ -11,29 +11,71 @@ from observability.metrics_collector import MetricsCollector
 import time
 
 from fastapi.middleware.cors import CORSMiddleware
-
 import threading
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("api")
 
 # Global flag - prevents requests from being served until agents are fully loaded
 _agents_ready = False
 _startup_error = None
+_last_status = "Waiting for background thread to start..."
+_memory_usage = "N/A"
+
+def get_process_memory():
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        mem_info = process.memory_info()
+        return f"{mem_info.rss / 1024 / 1024:.2f} MB"
+    except ImportError:
+        return "psutil not installed"
+    except Exception as e:
+        return f"Error: {e}"
 
 def _load_agents_in_background(app: FastAPI):
     """Downloads model weights and initializes agents in a background thread."""
-    global _agents_ready, _startup_error
+    global _agents_ready, _startup_error, _last_status, _memory_usage
     try:
         import traceback
+        _last_status = "Starting background loading..."
+        _memory_usage = get_process_memory()
+        logger.info(f"[_last_status] Memory: {_memory_usage}")
+
         print("[Startup] Background thread: loading agents & models...")
+        _last_status = "Importing workflow (this can take a while)..."
+        _memory_usage = get_process_memory()
+        
         from workflow.agent_graph import agentic_app
         from cache.redis_cache import RedisCache
+        
+        _last_status = "Initializing state values..."
         app.state.agentic_app = agentic_app
         app.state.redis_cache = RedisCache()
+        
+        # Trigger document ingestion explicitly now that agents are loaded
+        _last_status = "Ingesting knowledge base documents (RAG)..."
+        try:
+            from workflow.agent_graph import knowledge
+            knowledge.ingest_documents()
+        except Exception as ingest_e:
+            logger.warning(f"Ingestion warning: {ingest_e}")
+        
         _agents_ready = True
+        _last_status = "Ready"
+
+        _memory_usage = get_process_memory()
         print("[Startup] Background thread: All agents ready!")
+        logger.info(f"System ready. Memory: {_memory_usage}")
     except Exception as e:
         import traceback
         _startup_error = traceback.format_exc()
+        _last_status = f"CRASHED: {str(e)}"
+        _memory_usage = get_process_memory()
         print(f"[Startup] ERROR loading agents: {_startup_error}")
+        logger.error(f"Startup crash: {_startup_error}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -175,6 +217,8 @@ async def get_status():
     """Returns the startup readiness of the agent system."""
     return {
         "ready": _agents_ready,
+        "status": _last_status,
+        "memory": get_process_memory(),
         "error": _startup_error
     }
 

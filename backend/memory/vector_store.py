@@ -6,17 +6,28 @@ class VectorStore:
     Handles interactions with the ChromaDB vector database.
     """
     def __init__(self):
-        # Initialize an in-memory or persisted ChromaDB client
+        # Initialize an in-memory or persisted ChromaDB client but defer heavy ef
         self.client = chromadb.PersistentClient(path="./chroma_db")
-        
-        # Use ChromaDB's built-in ONNX embedding (no large downloads, works on free tier)
-        self.sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-        
-        # Get or create the memory collection using the specified embedding function
-        self.collection = self.client.get_or_create_collection(
-            name="research_memory",
-            embedding_function=self.sentence_transformer_ef
-        )
+        self._collection = None
+        self._ef = None
+
+    @property
+    def sentence_transformer_ef(self):
+        if self._ef is None:
+            from chromadb.utils import embedding_functions
+            # Use ChromaDB's built-in ONNX embedding (no large downloads, works on free tier)
+            self._ef = embedding_functions.DefaultEmbeddingFunction()
+        return self._ef
+
+    @property
+    def collection(self):
+        if self._collection is None:
+            self._collection = self.client.get_or_create_collection(
+                name="research_memory",
+                embedding_function=self.sentence_transformer_ef
+            )
+        return self._collection
+
 
     def store_document(self, text: str, doc_id: str):
         """
